@@ -102,9 +102,9 @@ class RIFERTXEngineOptions:
         opt_dim (int): Targeted optimal resolution.
         max_dim (int): Maximum supported resolution.
     """
-    min_dim: int = 384
-    opt_dim: int = 720
-    max_dim: int = 1312
+    min_dim: int = 256
+    opt_dim: int = 512
+    max_dim: int = 1280
 
 class RIFERTXEngineConfig:
     """ComfyUI Node for configuring resolution profiles.
@@ -116,9 +116,9 @@ class RIFERTXEngineConfig:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "min_dim": ("INT", {"default": 384, "min": 64, "max": 4096, "step": 8, "tooltip": "Minimum resolution dimension"}),
-                "opt_dim": ("INT", {"default": 720, "min": 64, "max": 4096, "step": 8, "tooltip": "Optimal resolution dimension (most common)"}),
-                "max_dim": ("INT", {"default": 1312, "min": 64, "max": 4096, "step": 8, "tooltip": "Maximum resolution dimension"}),
+                "min_dim": ("INT", {"default": 256, "min": 64, "max": 4096, "step": 8, "tooltip": "Minimum resolution dimension"}),
+                "opt_dim": ("INT", {"default": 512, "min": 64, "max": 4096, "step": 8, "tooltip": "Optimal resolution dimension (most common)"}),
+                "max_dim": ("INT", {"default": 1280, "min": 64, "max": 4096, "step": 8, "tooltip": "Maximum resolution dimension"}),
             }
         }
 
@@ -139,7 +139,7 @@ class RIFERTXEngineConfig:
         Returns:
             tuple: Contains the configuration dictionary.
         """
-        config = {"min_d": min_dim, "opt_d": opt_dim, "max_d": max_dim,}
+        config = {"min_dim": min_dim, "opt_dim": opt_dim, "max_dim": max_dim,}
         return (config,)
 
 
@@ -186,8 +186,8 @@ class RIFERTXEngineLoader:
 
         # Build tensorrt model path with detailed naming (includes profile)
         engine_channel = 3
-        e_min, e_opt, e_max = config.min_d, config.opt_d, config.max_d
-        tensorrt_model_path = os.path.join(tensorrt_models_dir, f"{onnx_name}_1x{engine_channel}x{e_min}x{min_}_1x{engine_channel}x{e_opt}x{e_opt}_1x{engine_channel}x{e_max}x{e_max}_{trt.__version__}.trt")
+        e_min, e_opt, e_max = config.min_dim, config.opt_dim, config.max_dim
+        tensorrt_model_path = os.path.join(tensorrt_models_dir, f"{onnx_name}_1x{engine_channel}x{e_min}x{e_min}_1x{engine_channel}x{e_opt}x{e_opt}_1x{engine_channel}x{e_max}x{e_max}_{trt.__version__}.trt")
 
         engine = Engine(tensorrt_model_path)
 
