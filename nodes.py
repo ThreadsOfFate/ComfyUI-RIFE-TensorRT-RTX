@@ -184,8 +184,6 @@ class RIFERTXEngineLoader:
 
         onnx_model_path = os.path.join(onnx_models_dir, f"{onnx_name}")
 
-        logging.info(f"Using resolution profile '{profile_name}': min={config.min_dim}, opt={config.opt_dim}, max={config.max_dim}")
-
         # Build tensorrt model path with detailed naming (includes profile)
         engine_channel = 3
         e_min, e_opt, e_max = config.min_d, config.opt_d, config.max_d
