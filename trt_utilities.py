@@ -297,11 +297,10 @@ class Engine:
         if not enable_all_tactics:
             config_kwargs["tactic_sources"] = []  
 
-        # Load ONNX file then convert the model to fp16
-        # Probably might cause issues if onnx file given is quantized or whatever
+        # Load ONNX file 
         onnx_bytes       = onnx.load(onnx_path)
         onnx_precision   = onnx_bytes.graph.input[0].type.tensor_type.elem_type        
-        onnx_simp, check = simplify(float16.convert_float_to_float16(onnx_bytes) if onnx_precision == onnx.TensorProto.FLOAT else onnx_bytes)
+        onnx_simp, check = simplify(onnx_bytes)
         
         if not check:
             error(f"Simplified ONNX model: {onnx_path} could not be validated")

@@ -11,6 +11,7 @@ import os
 import torch
 import typing
 
+import logging
 import numpy as np
 
 from comfy.model_management import soft_empty_cache, get_torch_device
@@ -73,6 +74,8 @@ def generate_frames_rife(
     cache_counter = 0
     
     pbar = ProgressBar(len(frames))
+    
+    logging.info(f"Interpolating frames")
 
     for frame_itr in range(len(frames) - 1): 
 
@@ -96,13 +99,14 @@ def generate_frames_rife(
             cache_counter += 1
             if cache_counter >= clear_cache_after_n_frames:
                 soft_empty_cache()
+                logging.info(f"Clearing cache...")
                 cache_counter = 0
 
             pbar.update(1)
 
     # Append final frame
     output_frames[out_len] = frames[-1:]
-    logger(f"done! - {(len(frames) -1) * (multiplier-1)} new frames generated at resolution: {output_frames[0].shape}")
+    logging.info(f"done! - {(len(frames) -1) * (multiplier-1)} new frames generated at resolution: {output_frames[0].shape}")
     out_len += 1
 
     # clear cache for courtesy

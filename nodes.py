@@ -18,6 +18,10 @@ import torch
 import comfy.model_management as mm
 
 from pathlib import Path
+
+# Use polygraphy TensorRTX backend
+os.environ["POLYGRAPHY_USE_TENSORRT_RTX"] = "1"
+
 from polygraphy import cuda
 from .vfi_utilities import preprocess_frames, postprocess_frames, generate_frames_rife
 from .trt_utilities import Engine
