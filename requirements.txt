@@ -1,0 +1,12 @@
+# Default: CUDA 13 (RTX 50 series, CUDA 13.0+)
+# For CUDA 12, use requirements_cu12.txt instead
+tensorrt_cu13<10.16.0
+tensorrt_cu13_bindings<10.16.0
+tensorrt_cu13_libs<10.16.0
+cuda-toolkit
+einops
+colored
+polygraphy
+cuda-python
+requests
+tqdm

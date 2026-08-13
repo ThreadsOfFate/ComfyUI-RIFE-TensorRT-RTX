@@ -1,50 +1,37 @@
-"""Utility functions for RIFE Video Frame Interpolation (VFI).
+# https://github.com/Fannovel16/ComfyUI-Frame-Interpolation/blob/main/vfi_utils.py
 
-This module contains preprocessing, postprocessing, and the core interpolation
-loop logic used to generate intermediate frames between a sequence of images.
-
-https://github.com/Fannovel16/ComfyUI-Frame-Interpolation/blob/main/vfi_utils.py
-"""
-
-import einops
 import os
 import torch
 import typing
-
-import logging
-import numpy as np
-
+import einops
 from comfy.model_management import soft_empty_cache, get_torch_device
+import numpy as np
 from comfy.utils import ProgressBar
+from colored import Fore, Back, Style
 
 DEVICE = get_torch_device()
 
-def preprocess_frames(frames: torch.Tensor) -> torch.Tensor:
-    """Prepares ComfyUI image batches for model inference.
+def load_file_from_github_release(model_type, ckpt_name):
+    error_strs = []
+    for i, base_model_download_url in enumerate(BASE_MODEL_DOWNLOAD_URLS):
+        try:
+            return load_file_from_url(base_model_download_url + ckpt_name, get_ckpt_container_path(model_type))
+        except Exception:
+            traceback_str = traceback.format_exc()
+            if i < len(BASE_MODEL_DOWNLOAD_URLS) - 1:
+                print("Failed! Trying another endpoint.")
+            error_strs.append(f"Error when downloading from: {base_model_download_url + ckpt_name}\n\n{traceback_str}")
 
-    Converts images from (Batch, Height, Width, Channels) to 
-    (Batch, Channels, Height, Width) and ensures only RGB channels are present.
+    error_str = '\n\n'.join(error_strs)
+    raise Exception(f"Tried all GitHub base urls to download {ckpt_name} but no suceess. Below is the error log:\n\n{error_str}")
 
-    Args:
-        frames (torch.Tensor): Input tensor in BHWC format.
+def logger(msg):
+    print(f'{Style.reset}{Fore.cyan}⚡ [Rife Tensorrt] - {msg}{Style.reset}')
 
-    Returns:
-        torch.Tensor: Preprocessed tensor in BCHW format.
-    """
+def preprocess_frames(frames):
     return einops.rearrange(frames[..., :3], "n h w c -> n c h w")
 
-def postprocess_frames(frames: torch.Tensor) -> torch.Tensor:
-    """Converts model output back to ComfyUI standard format.
-
-    Converts images from (Batch, Channels, Height, Width) back to 
-    (Batch, Height, Width, Channels) and moves them to CPU memory.
-
-    Args:
-        frames (torch.Tensor): Output tensor from the model in BCHW format.
-
-    Returns:
-        torch.Tensor: Postprocessed tensor in BHWC format on CPU.
-    """
+def postprocess_frames(frames):
     return einops.rearrange(frames, "n c h w -> n h w c")[..., :3].cpu()
 
 def generate_frames_rife(
@@ -53,40 +40,20 @@ def generate_frames_rife(
         multiplier,
         return_middle_frame_function
         ):
-    """Core interpolation loop for generating intermediate frames.
 
-    Iterates through a sequence of frames and calls the provided inference 
-    function to generate 'n' intermediate frames based on the multiplier.
-
-    Args:
-        frames (torch.Tensor): The preprocessed frame sequence (BCHW).
-        clear_cache_after_n_frames (int): Interval for VRAM cache clearing.
-        multiplier (int): The factor by which to increase the frame count.
-        return_middle_frame_function (Callable): Function that takes two 
-            frames and a timestep and returns the interpolated frame.
-
-    Returns:
-        torch.Tensor: The complete sequence including original and 
-            interpolated frames.
-    """
     output_frames = torch.zeros(multiplier*frames.shape[0], *frames.shape[1:], device="cpu")
     out_len = 0
-    cache_counter = 0
-    
-    pbar = ProgressBar(len(frames))
-    
-    logging.info(f"Interpolating frames")
 
-    for frame_itr in range(len(frames) - 1): 
+    number_of_frames_processed_since_last_cleared_cuda_cache = 0
+    # pbar = ProgressBar(len(frames))
+
+    for frame_itr in range(len(frames) - 1): # Skip the final frame since there are no frames after it
 
         frame_0 = frames[frame_itr:frame_itr+1]
         frame_1 = frames[frame_itr+1:frame_itr+2]
-        
-        # Store the current original frame
-        output_frames[out_len] = frame_0 
+        output_frames[out_len] = frame_0 # Start with first frame
         out_len += 1
 
-        # Generate intermediate frames
         for middle_i in range(1, multiplier):
             timestep = middle_i/multiplier
             middle_frame = return_middle_frame_function(frame_0, frame_1, timestep).detach().cpu()
@@ -95,22 +62,25 @@ def generate_frames_rife(
             output_frames[out_len] = middle_frame
             out_len +=1
 
-            # VRAM Management
-            cache_counter += 1
-            if cache_counter >= clear_cache_after_n_frames:
+            # Try to avoid a memory overflow by clearing cuda cache regularly
+            number_of_frames_processed_since_last_cleared_cuda_cache += 1
+            if number_of_frames_processed_since_last_cleared_cuda_cache >= clear_cache_after_n_frames:
                 soft_empty_cache()
-                logging.info(f"Clearing cache...")
-                cache_counter = 0
+                number_of_frames_processed_since_last_cleared_cuda_cache = 0
+                logger("Clearing cache...")
 
-            pbar.update(1)
+            # pbar.update(1)
+
 
     # Append final frame
     output_frames[out_len] = frames[-1:]
-    logging.info(f"done! - {(len(frames) -1) * (multiplier-1)} new frames generated at resolution: {output_frames[0].shape}")
+    logger(f"done! - {(len(frames) -1) * (multiplier-1)} new frames generated at resolution: {output_frames[0].shape}")
     out_len += 1
 
     # clear cache for courtesy
     soft_empty_cache()
-    
-    # Slice to actual length in case of rounding or logic offsets
-    return output_frames[:out_len]
+    logger("Final clearing cache done ...")
+#
+    res = output_frames[:out_len]
+
+    return res

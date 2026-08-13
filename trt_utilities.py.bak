@@ -7,6 +7,9 @@ from polygraphy import util
 from polygraphy.backend.trt import ModifyNetworkOutputs, Profile
 from polygraphy.backend.trt import (
     engine_from_bytes,
+    engine_from_network,
+    network_from_onnx_path,
+    save_engine,
 )
 
 import modelopt.onnx.autocast as autocast

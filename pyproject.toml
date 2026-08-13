@@ -1,0 +1,14 @@
+[project]
+name = "ComfyUI_RIFE_TensorRT_Auto"
+description = "Ultra fast frame interpolation using RIFE with TensorRT with Automatic downloading"
+version = "1.1.1"
+license = { file = "LICENSE" }
+
+[project.urls]
+Repository = "https://github.com/silveroxides/ComfyUI_RIFE_TensorRT_Auto"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = "silveroxides"
+DisplayName = "ComfyUI_RIFE_TensorRT_Auto"
+Icon = ""

@@ -1,76 +1,115 @@
-# ComfyUI RIFE TensorRT-RTX
+<div align="center">
 
-[![python](https://img.shields.io/badge/python-3.13.9-green)](https://www.python.org/downloads/release/python-31313/)
-[![cuda](https://img.shields.io/badge/cuda-13.0-green)](https://developer.nvidia.com/cuda-downloads)
-[![trt](https://img.shields.io/badge/TRT_RTX-1.4.0.76-green)](https://developer.nvidia.com/tensorrt)
+# ComfyUI Rife TensorRT ⚡
+
+[![python](https://img.shields.io/badge/python-3.12-green)](https://www.python.org/downloads/)
+[![cuda](https://img.shields.io/badge/cuda-13.0-green)](https://developer.nvidia.com/cuda-13-0-2-download-archive)
+[![trt](https://img.shields.io/badge/TRT-10.14.1.48-green)](https://developer.nvidia.com/tensorrt)
 [![by-nc-sa/4.0](https://img.shields.io/badge/license-CC--BY--NC--SA--4.0-lightgrey)](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en)
 
-## Overview
-
-This project is a fork of the original [ComfyUI_RIFE_TensorRT_Auto](https://github.com/silveroxides/ComfyUI_RIFE_TensorRT_Auto) by [silveroxides](https://github.com/silveroxides). 
-This project uses TensorRT-RTX to do RIFE interpolation
-
-## Features
-- **NVIDIA TensorRT Acceleration**: Leverages Tensor Cores for up to 30x faster frame interpolation compared to standard local methods.
-- **Dynamic Shape Support**: Configure minimum, optimal, and maximum resolutions to handle varying input sizes without rebuilding the engine for every image.
-- **Automatic Engine Building**: Automatically compiles specialized `.trt` files from your `.onnx` models if a matching engine isn't found.
-- **Persistent Timing Cache**: Saves hardware-specific optimization data to a local cache to speed up subsequent engine builds.
-- **Memory Efficient**: Optimized for VRAM management with automatic garbage collection and cache clearing after inference.
+![node](https://github.com/user-attachments/assets/5fd6d529-300c-42a5-b9cf-46e031f0bcb5)
 
 
-## Examples
+</div>
 
-![Simple Example](assets/example.png)
+This project provides a [TensorRT](https://github.com/NVIDIA/TensorRT) implementation of [RIFE](https://github.com/hzwer/ECCV2022-RIFE) for ultra fast frame interpolation inside ComfyUI
 
-## Installation
+This project is licensed under [CC BY-NC-SA](https://creativecommons.org/licenses/by-nc-sa/4.0/), everyone is FREE to access, use, modify and redistribute with the same license.
 
-### ComfyUI Manager
+If you like the project, please give me a star! ⭐
 
-This project has not been submitted to the ComfyUI Manager registry yet. But you can still install it this way:
+---
 
-1. Open ComfyUI Manager.
-2. Click the `Custom Nodes Manager` to open the custom nodes manager page.
-3. On the bottom right corner, click the `Install via Git URL` button.
-4. Enter the URL of this repository: `https://github.com/ThreadsOfFate/ComfyUI-RIFE-TensorRT-RTX`
-5. Click "Confirm".
-6. Restart ComfyUI.
+## ⏱️ Performance
 
-### Manual
+_Note: The following results were benchmarked on FP16 engines inside ComfyUI, using 2000 frames consisting of 2 alternating similar frames, averaged 2-3 times_
 
-1. On the github page, click on the green `<> Code` button and then "Download ZIP".
-2. Extract the root folder within the downloaded ZIP file to your ComfyUI `custom_nodes` directory.
-3. Using the same python environment that runs ComfyUI, install the required dependencies: `python -m pip install -r custom_nodes/ComfyUI-Upscaler-TensorRT-Advanced/requirements.txt`.
-4. Restart ComfyUI.
+| Device | Rife Engine | Resolution| Multiplier | FPS |
+| :----: | :-: | :-: | :-: | :-: |
+|  H100  | rife49_ensemble_True_scale_1_sim | 512 x 512  | 2 | 45 |
+|  H100  | rife49_ensemble_True_scale_1_sim | 512 x 512  | 4 | 57 |
+|  H100  | rife49_ensemble_True_scale_1_sim | 1280 x 1280  | 2 | 21 |
 
+## 🚀 Installation
 
-### Requirements
+Navigate to the ComfyUI `/custom_nodes` directory
+
+```bash
+git clone https://github.com/yuvraj108c/ComfyUI-Rife-Tensorrt
+cd ./ComfyUI-Rife-Tensorrt
 pip install -r requirements.txt
+```
 
+### ⚠️ CUDA Version Selection
 
-### CUDA Toolkit Required
-Please download NVIDIA CUDA Toolkit [https://developer.nvidia.com/cuda/toolkit](https://developer.nvidia.com/cuda/toolkit)
+This node defaults to **CUDA 13** (RTX 50 series, driver 580+).
 
-###Nodes Included
-🟦 RIFE RTX Engine Builder (RIFERTXEngineLoader)
-  Loads a TensorRT-RTX engine. If the engine file for your specific GPU and resolution settings does not exist, it will automatically build one from the source ONNX model.
-🟦 RIFE RTX Frame Interpolation (RIFERTXFrameInterpolation)
-  The core execution node. It takes an image and a loaded engine to perform the upscale. It supports an optional resize input for custom final dimensions.
-🟦 RIFE RTX Engine Config (RIFERTXEngineConfig)
-  Allows you to define the resolution bounds (min/opt/max) for the engine.
-  Min/Max: The range of resolutions the engine can handle.
-  Opt: The resolution the engine is most optimized for.
-  
-  
-GPU: NVIDIA RTX Series (TensorRT-RTX requires Tensor Cores).
-Software: NVIDIA Drivers and a compatible version of TensorRT (handled via requirements.txt).
+**For CUDA 12 (RTX 30/40 series):**
+```bash
+pip install -r requirements_cu12.txt
+```
 
-###Troubleshooting
-First Build Time: The first time you load a model with new shape settings, it may take several minutes to compile the engine. Check the console for progress via the TQDM bar.
-VRAM Errors: If the build fails, try reducing the width_max or height_max in the Dynamic Shape Config.
+**For CUDA 13 (Default):**
+```bash
+pip install -r requirements.txt
+```
 
+### 📦 CUDA Toolkit Required
 
-## 🛠️ Supported Models
+The node automatically detects your CUDA installation via `CUDA_PATH` or `CUDA_HOME` environment variables.
 
-rife47_ensemble_True_scale_1_sim
-rife48_ensemble_True_scale_1_sim
-rife49_ensemble_True_scale_1_sim
+If CUDA is not detected, download from: https://developer.nvidia.com/cuda-13-0-2-download-archive
+
+### 🎯 Resolution Profiles
+
+The node supports resolution profiles to optimize VRAM usage:
+- **small**: 480-896px (recommended for most video generation)
+- **medium**: 720-1280px (for higher resolution videos)
+- **custom**: Connect a "RIFE Custom Resolution Config" node for manual control
+
+The following RIFE models are supported and will be automatically downloaded and built:
+   - **rife49_ensemble_True_scale_1_sim** (default) - Latest and most accurate
+   - **rife48_ensemble_True_scale_1_sim** - Good balance of speed and quality
+   - **rife47_ensemble_True_scale_1_sim** - Fastest option
+
+Models are automatically downloaded from [HuggingFace](https://huggingface.co/yuvraj108c/rife-onnx) and TensorRT engines are built on first use.
+
+## ☀️ Usage
+
+1. **Load Model**: Insert `Right Click -> Add Node -> tensorrt -> Load Rife Tensorrt Model`
+   - Choose your preferred RIFE model (rife47, rife48, or rife49)
+   - Select precision (fp16 recommended for speed, fp32 for maximum accuracy)
+   - Select resolution profile (small, medium, or custom)
+   - The model will be automatically downloaded and TensorRT engine built on first use
+
+2. **Process Frames**: Insert `Right Click -> Add Node -> tensorrt -> Rife Tensorrt`
+   - Connect the loaded model from step 1
+   - Input your video frames
+   - Configure interpolation settings (multiplier, CUDA graph, etc.)
+
+## 🤖 Environment tested
+
+- Windows 11, CUDA 13.0, TensorRT 10.14.1.48, Python 3.12, RTX 5070 Ti
+- WSL Ubuntu 24.04.03 LTS, CUDA 12.9, TensorRT 10.13.3.9, Python 3.12.11, RTX 5080
+
+## 🚨 Updates
+
+### January 2026
+- **CUDA 13 Default**: Updated to CUDA 13.0 and TensorRT 10.14.1.48
+- **Auto CUDA Detection**: Automatically finds CUDA toolkit and DLL paths
+- **Resolution Profiles**: Added small/medium/custom profiles to reduce VRAM usage
+
+### December 2025
+- **Automatic Model Management**: No more manual downloads! Models are automatically downloaded from HuggingFace and TensorRT engines are built on demand
+- **Improved Workflow**: New two-node system with `Load Rife Tensorrt Model` + `Rife Tensorrt` for better organization
+- **Updated Dependencies**: TensorRT updated to 10.13.3.9 for better performance and compatibility
+
+## 👏 Credits
+
+- https://github.com/styler00dollar/VSGAN-tensorrt-docker
+- https://github.com/Fannovel16/ComfyUI-Frame-Interpolation
+- https://github.com/hzwer/ECCV2022-RIFE
+
+## License
+
+[Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
